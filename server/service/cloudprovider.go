@@ -7,14 +7,15 @@ import (
 )
 
 type CloudProvider interface {
-	ProcessBillingData(account *pb.Account) *ProcessBillingDataRes
-	ProcessCostTrends(account *pb.Account) *ProcessCostTrendsRes
-	ProcessRecommendation(account *pb.Account) *ProcessRecommendationRes
-	ProcessWatchCostAlerts(account *pb.Account) *ProcessWatchCostAlertsRes
+	ProcessBillingData(account *pb.Account, timerange *pb.TimeRange) ([]*ProcessBillingDataRes, error)
+	ProcessCostTrends(account *pb.Account, service string) (*ProcessCostTrendsRes, error)
+	ProcessRecommendation(account *pb.Account) (*ProcessRecommendationRes, error)
+	ProcessWatchCostAlerts(account *pb.Account, costThreshold float64) (*ProcessWatchCostAlertsRes, error)
 }
+
 // 返回值结构体类型
 type ProcessBillingDataRes struct {
-	service   string
+	tag       string
 	cost      float64
 	usageDate *timestamppb.Timestamp
 }
@@ -28,15 +29,15 @@ type ProcessRecommendationRes struct {
 }
 
 type ProcessWatchCostAlertsRes struct {
-	title string
-    description string
-    current_cost float64
-    alertTime *timestamppb.Timestamp 
+	title        string
+	description  string
+	current_cost float64
+	alertTime    *timestamppb.Timestamp
 }
 
-//返回值结构体获取方法
-func (res *ProcessBillingDataRes) GetService() string {
-	return res.service
+// 返回值结构体获取方法
+func (res *ProcessBillingDataRes) GetTag() string {
+	return res.tag
 }
 
 func (res *ProcessBillingDataRes) GetCost() float64 {
@@ -72,9 +73,9 @@ func (res *ProcessWatchCostAlertsRes) GetAlertTime() *timestamppb.Timestamp {
 }
 
 // 结构体构造函数
-func NewProcessBillingDataRes(service string, cost float64, usageDate *timestamppb.Timestamp) *ProcessBillingDataRes {
+func NewProcessBillingDataRes(tag string, cost float64, usageDate *timestamppb.Timestamp) *ProcessBillingDataRes {
 	return &ProcessBillingDataRes{
-		service:   service,
+		tag:       tag,
 		cost:      cost,
 		usageDate: usageDate,
 	}
@@ -94,9 +95,9 @@ func NewProcessRecommendationsRes(recommendations []*pb.Recommendation) *Process
 
 func NewProcessWatchCostAlertsRes(title string, description string, current_cost float64, alertTime *timestamppb.Timestamp) *ProcessWatchCostAlertsRes {
 	return &ProcessWatchCostAlertsRes{
-		title: title,
-		description: description,
+		title:        title,
+		description:  description,
 		current_cost: current_cost,
-		alertTime: alertTime,
+		alertTime:    alertTime,
 	}
 }

@@ -55,7 +55,7 @@ message DailyCost{
 }
 
 message CostTrend{
-    string service = 1;
+    string tag = 1;
     repeated DailyCost daily_costs = 2;
 }
 
@@ -67,7 +67,7 @@ message StreamBillingDataRequest{
 message StreamBillingDataResponse{
     string provider = 1;
     string account_id = 2;
-    string service = 3;
+    string tag = 3;
     double cost = 4;
     google.protobuf.Timestamp usage_date = 5;
 }

@@ -13,11 +13,11 @@ func NewResponseFactory() *ResponseFactory {
 	return &ResponseFactory{}
 }
 
-func (responseFactory *ResponseFactory) CreateStreamBillingDataResponse(provider string, accountId string, service string, cost float64, usageDate *timestamppb.Timestamp) (*pb.StreamBillingDataResponse, error) {
+func (responseFactory *ResponseFactory) CreateStreamBillingDataResponse(provider string, accountId string, tag string, cost float64, usageDate *timestamppb.Timestamp) (*pb.StreamBillingDataResponse, error) {
 	if provider == "" {
 		return nil, fmt.Errorf("invalid input: provider cannot be empty")
 	}
-	if accountId == "" || service == "" {
+	if accountId == "" || tag == "" {
 		return nil, fmt.Errorf("Provider: %s, invalid input", provider)
 	}
 	if cost < 0 {
@@ -29,7 +29,7 @@ func (responseFactory *ResponseFactory) CreateStreamBillingDataResponse(provider
 	return &pb.StreamBillingDataResponse{
 		Provider:  provider,
 		AccountId: accountId,
-		Service:   service,
+		Tag:       tag,
 		Cost:      cost,
 		UsageDate: usageDate,
 	}, nil

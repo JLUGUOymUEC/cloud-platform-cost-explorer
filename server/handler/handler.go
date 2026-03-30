@@ -13,7 +13,7 @@ type CostOptimizerHandler struct {
 	cloudProviders  map[string]service.CloudProvider
 	responseFactory *ResponseFactory
 	clients         map[string]pb.CostOptimizationService_HandleServer
-	wg				sync.WaitGroup
+	wg              sync.WaitGroup
 }
 
 func NewCostOptimizerHandler(ctx context.Context, awsService *service.AWSService, azureService *service.AzureService, alertService *service.AlertService) *CostOptimizerHandler {
@@ -30,46 +30,45 @@ func NewCostOptimizerHandler(ctx context.Context, awsService *service.AWSService
 	}
 }
 
-func (handler *CostOptimizerHandler) Handle(stream pb.CostOptimizationService_HandleServer) error {	
+func (handler *CostOptimizerHandler) Handle(stream pb.CostOptimizationService_HandleServer) error {
 	errChan := make(chan error, 1)
-	go func(){
-		select{
-			case <-handler.ctx.Done():
-				return 
-			default:
+	go func() {
+		select {
+		case <-handler.ctx.Done():
+			return
+		default:
 		}
 	}()
 	for {
 
-			//一直不发消息就一直阻塞所以要用goroutine
-			req, err := stream.Recv()
-			
-			if err != nil {
-				fmt.Printf("Error receiving request: %v\n", err)
-				continue
-			}
-			switch req.RequestType.(type) {
-			case *pb.HandleRequest_StreamBillingDataRequest:
-				// 处理来自AWS和Azure的账单数据请求
-				err = handler.handleStreamBillingDataRequest(req, stream)
-			case *pb.HandleRequest_BatchGetCostTrendsRequest:
-				// 处理获取成本趋势的请求
-				err = handler.handleBatchGetCostTrendsRequest(req, stream)
-			case *pb.HandleRequest_GetRecommendationsRequest:
-				// 处理获取优化建议的请求
-				err = handler.handleGetRecommendationsRequest(req, stream)
-			case *pb.HandleRequest_WatchCostAlertsRequest:
-				// 处理监控成本警报的请求
-				err = handler.handleWatchCostAlertsRequest(req, stream)
-			}
-			if err != nil {
-				fmt.Printf("Error handling request: %v\n", err)
-				errChan <- err
-			}
+		//一直不发消息就一直阻塞所以要用goroutine
+		req, err := stream.Recv()
 
+		if err != nil {
+			fmt.Printf("Error receiving request: %v\n", err)
+			continue
 		}
-	
-			
+		switch req.RequestType.(type) {
+		case *pb.HandleRequest_StreamBillingDataRequest:
+			// 处理来自AWS和Azure的账单数据请求
+			err = handler.handleStreamBillingDataRequest(req, stream)
+		case *pb.HandleRequest_BatchGetCostTrendsRequest:
+			// 处理获取成本趋势的请求
+			err = handler.handleBatchGetCostTrendsRequest(req, stream)
+		case *pb.HandleRequest_GetRecommendationsRequest:
+			// 处理获取优化建议的请求
+			err = handler.handleGetRecommendationsRequest(req, stream)
+		case *pb.HandleRequest_WatchCostAlertsRequest:
+			// 处理监控成本警报的请求
+			err = handler.handleWatchCostAlertsRequest(req, stream)
+		}
+		if err != nil {
+			fmt.Printf("Error handling request: %v\n", err)
+			errChan <- err
+		}
+
+	}
+
 }
 
 func (handler *CostOptimizerHandler) handleStreamBillingDataRequest(req *pb.HandleRequest, stream pb.CostOptimizationService_HandleServer) error {
@@ -78,31 +77,39 @@ func (handler *CostOptimizerHandler) handleStreamBillingDataRequest(req *pb.Hand
 	Accounts := streamBillingDatarequest.GetAccounts()
 	for _, account := range Accounts {
 		// 处理每个账户的账单数据
-		var res *service.ProcessBillingDataRes
+		var res []*service.ProcessBillingDataRes
+		var err error
 		if _, ok := handler.cloudProviders[account.GetProvider()]; !ok {
-			res = service.NewProcessBillingDataRes("Unknown", 0.0, nil)
+			res = append(res, service.NewProcessBillingDataRes("Unknown", 0.0, nil))
 
 		} else {
-			res = handler.cloudProviders[account.GetProvider()].ProcessBillingData(account)
-		}
+			res, err = handler.cloudProviders[account.GetProvider()].ProcessBillingData(account, streamBillingDatarequest.GetTimeRange())
 
-		// 将处理结果发送回客户端
-		response, err := handler.responseFactory.CreateStreamBillingDataResponse(
-			account.GetProvider(),
-			account.GetAccountId(),
-			res.GetService(),
-			res.GetCost(),
-			res.GetUsageDate(),
-		)
+		}
 		if err != nil {
 			fmt.Printf("Error creating StreamBillingDataRequest: %v\n", err)
 			return err
 		}
-		stream.Send(&pb.HandleResponse{
-			ResponseType: &pb.HandleResponse_StreamBillingDataResponse{
-				StreamBillingDataResponse: response,
-			},
-		})
+		// 将处理结果发送回客户端
+		for _, record := range res {
+			response, err := handler.responseFactory.CreateStreamBillingDataResponse(
+				account.GetProvider(),
+				account.GetAccountId(),
+				record.GetTag(),
+				record.GetCost(),
+				record.GetUsageDate(),
+			)
+			if err != nil {
+				fmt.Printf("Error creating StreamBillingDataRequest: %v\n", err)
+				return err
+			}
+			stream.Send(&pb.HandleResponse{
+				ResponseType: &pb.HandleResponse_StreamBillingDataResponse{
+					StreamBillingDataResponse: response,
+				},
+			})
+		}
+
 	}
 	return nil
 }
@@ -112,15 +119,20 @@ func (handler *CostOptimizerHandler) handleBatchGetCostTrendsRequest(req *pb.Han
 	// 处理批量获取成本趋势的请求
 	Account := batchGetCostTrendsRequest.GetAccount()
 	var res *service.ProcessCostTrendsRes
+	var err error
 	if _, ok := handler.cloudProviders[Account.GetProvider()]; !ok {
 		res = service.NewProcessCostTrendsRes([]*pb.CostTrend{
 			{
-				Service:    "Unknown",
+				Tag:        "Unknown",
 				DailyCosts: nil,
 			},
 		})
 	} else {
-		res = handler.cloudProviders[Account.GetProvider()].ProcessCostTrends(Account)
+		res, err = handler.cloudProviders[Account.GetProvider()].ProcessCostTrends(Account, batchGetCostTrendsRequest.GetService())
+	}
+	if err != nil {
+		fmt.Printf("Error creating BatchGetCostTrendsResponse: %v\n", err)
+		return err
 	}
 	response, err := handler.responseFactory.CreateBatchGetCostTrendsResponse(
 		res.GetCostTrends(),
@@ -142,6 +154,7 @@ func (handler *CostOptimizerHandler) handleGetRecommendationsRequest(req *pb.Han
 	// 处理获取优化建议的请求
 	Account := getRecommendationsRequest.GetAccount()
 	var res *service.ProcessRecommendationRes
+	var err error
 	if _, ok := handler.cloudProviders[Account.GetProvider()]; !ok {
 		res = service.NewProcessRecommendationsRes([]*pb.Recommendation{
 			{
@@ -151,7 +164,11 @@ func (handler *CostOptimizerHandler) handleGetRecommendationsRequest(req *pb.Han
 			},
 		})
 	} else {
-		res = handler.cloudProviders[Account.GetProvider()].ProcessRecommendation(Account)
+		res, err = handler.cloudProviders[Account.GetProvider()].ProcessRecommendation(Account)
+	}
+	if err != nil {
+		fmt.Printf("Error creating GetRecommendationsResponse: %v\n", err)
+		return err
 	}
 	response, err := handler.responseFactory.CreateGetRecommendationsResponse(
 		res.GetRecommendations(),
@@ -161,10 +178,10 @@ func (handler *CostOptimizerHandler) handleGetRecommendationsRequest(req *pb.Han
 		return err
 	}
 	stream.Send(&pb.HandleResponse{
-			ResponseType: &pb.HandleResponse_GetRecommendationsResponse{
-				GetRecommendationsResponse: response,
-			},
-		})
+		ResponseType: &pb.HandleResponse_GetRecommendationsResponse{
+			GetRecommendationsResponse: response,
+		},
+	})
 	return nil
 }
 
@@ -174,10 +191,15 @@ func (handler *CostOptimizerHandler) handleWatchCostAlertsRequest(req *pb.Handle
 	Accounts := watchCostAlertsRequest.GetAccounts()
 	for _, account := range Accounts {
 		var res *service.ProcessWatchCostAlertsRes
+		var err error
 		if _, ok := handler.cloudProviders[account.GetProvider()]; !ok {
 			res = service.NewProcessWatchCostAlertsRes("Unknown", "Unknown", 0.0, nil)
 		} else {
-			res = handler.cloudProviders[account.GetProvider()].ProcessWatchCostAlerts(account)
+			res, err = handler.cloudProviders[account.GetProvider()].ProcessWatchCostAlerts(account, watchCostAlertsRequest.GetCostThreshold())
+			if err != nil {
+				fmt.Printf("Error creating WatchCostAlertsResponse: %v\n", err)
+				return err
+			}
 		}
 		response, err := handler.responseFactory.CreateWatchCostAlertsResponse(
 			res.GetTitle(),
@@ -199,7 +221,6 @@ func (handler *CostOptimizerHandler) handleWatchCostAlertsRequest(req *pb.Handle
 	return nil
 }
 
-
 func (handler *CostOptimizerHandler) GetClients() map[string]pb.CostOptimizationService_HandleServer {
 	return handler.clients
 }
@@ -212,10 +233,10 @@ func (handler *CostOptimizerHandler) RemoveClient(clientID string) {
 	delete(handler.clients, clientID)
 }
 
-func (handler *CostOptimizerHandler) StartServe(){
-	for _, client :=range handler.clients{
+func (handler *CostOptimizerHandler) StartServe() {
+	for _, client := range handler.clients {
 		handler.wg.Add(1)
-		go func(client pb.CostOptimizationService_HandleServer){
+		go func(client pb.CostOptimizationService_HandleServer) {
 			defer handler.wg.Done()
 			handler.Handle(client)
 		}(client)

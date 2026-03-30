@@ -454,7 +454,7 @@ func (x *DailyCost) GetCost() float64 {
 
 type CostTrend struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Service       string                 `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
+	Tag           string                 `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
 	DailyCosts    []*DailyCost           `protobuf:"bytes,2,rep,name=daily_costs,json=dailyCosts,proto3" json:"daily_costs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -490,9 +490,9 @@ func (*CostTrend) Descriptor() ([]byte, []int) {
 	return file_cost_v1_cost_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *CostTrend) GetService() string {
+func (x *CostTrend) GetTag() string {
 	if x != nil {
-		return x.Service
+		return x.Tag
 	}
 	return ""
 }
@@ -560,7 +560,7 @@ type StreamBillingDataResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
 	AccountId     string                 `protobuf:"bytes,2,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	Service       string                 `protobuf:"bytes,3,opt,name=service,proto3" json:"service,omitempty"`
+	Tag           string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
 	Cost          float64                `protobuf:"fixed64,4,opt,name=cost,proto3" json:"cost,omitempty"`
 	UsageDate     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=usage_date,json=usageDate,proto3" json:"usage_date,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -611,9 +611,9 @@ func (x *StreamBillingDataResponse) GetAccountId() string {
 	return ""
 }
 
-func (x *StreamBillingDataResponse) GetService() string {
+func (x *StreamBillingDataResponse) GetTag() string {
 	if x != nil {
-		return x.Service
+		return x.Tag
 	}
 	return ""
 }
@@ -1025,20 +1025,20 @@ const file_cost_v1_cost_proto_rawDesc = "" +
 	"\x06Filter\"O\n" +
 	"\tDailyCost\x12.\n" +
 	"\x04date\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x04date\x12\x12\n" +
-	"\x04cost\x18\x02 \x01(\x01R\x04cost\"Z\n" +
-	"\tCostTrend\x12\x18\n" +
-	"\aservice\x18\x01 \x01(\tR\aservice\x123\n" +
+	"\x04cost\x18\x02 \x01(\x01R\x04cost\"R\n" +
+	"\tCostTrend\x12\x10\n" +
+	"\x03tag\x18\x01 \x01(\tR\x03tag\x123\n" +
 	"\vdaily_costs\x18\x02 \x03(\v2\x12.cost.v1.DailyCostR\n" +
 	"dailyCosts\"{\n" +
 	"\x18StreamBillingDataRequest\x12,\n" +
 	"\baccounts\x18\x01 \x03(\v2\x10.cost.v1.AccountR\baccounts\x121\n" +
 	"\n" +
-	"time_range\x18\x02 \x01(\v2\x12.cost.v1.TimeRangeR\ttimeRange\"\xbf\x01\n" +
+	"time_range\x18\x02 \x01(\v2\x12.cost.v1.TimeRangeR\ttimeRange\"\xb7\x01\n" +
 	"\x19StreamBillingDataResponse\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1d\n" +
 	"\n" +
-	"account_id\x18\x02 \x01(\tR\taccountId\x12\x18\n" +
-	"\aservice\x18\x03 \x01(\tR\aservice\x12\x12\n" +
+	"account_id\x18\x02 \x01(\tR\taccountId\x12\x10\n" +
+	"\x03tag\x18\x03 \x01(\tR\x03tag\x12\x12\n" +
 	"\x04cost\x18\x04 \x01(\x01R\x04cost\x129\n" +
 	"\n" +
 	"usage_date\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tusageDate\"m\n" +
