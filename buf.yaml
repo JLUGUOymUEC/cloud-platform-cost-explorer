@@ -1,0 +1,12 @@
+version: v2
+modules:
+  - path: proto
+    name: buf.build/gym/cloud-cost-optimizer 
+deps:
+  - buf.build/googleapis/googleapis #依赖谷歌api
+lint:
+  use:
+    - DEFAULT
+breaking:
+  use:
+    - FILE # Check for breaking changes in the entire file, not just the messages.

@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package cost.v1;
+
+option go_package = "cloud-cost-optimizer/gen/cost/v1;costv1";
+
+import "google/protobuf/timestamp.proto";
+
+// service defination
+
+// stream 在后面就是服务端可以多发，在前面就是客户端可以多发，都有就是双向流都可以发，都没有就是只能发一次（一来一回），只是在接口函数中调用的次数有规定
+// 哪个端带Send哪个端就能发，哪个端带Recv哪个端就能收
+// cost optimize service 
+service CostOptimizationService {
+    // 双向流，客户端和服务端都可以多次发送和接收消息 统一接收后分类处理
+    rpc Handle(stream HandleRequest) returns (stream HandleResponse);
+}
+
+//同意请求
+message HandleRequest{
+    oneof request_type{
+        StreamBillingDataRequest stream_billing_data_request = 1;
+        WatchCostAlertsRequest watch_cost_alerts_request = 2;
+        GetRecommendationsRequest get_recommendations_request = 3;
+        BatchGetCostTrendsRequest batch_get_cost_trends_request = 4;
+    }
+}
+message HandleResponse{
+    oneof response_type {
+      StreamBillingDataResponse stream_billing_data_response = 1;
+      WatchCostAlertsResponse watch_cost_alerts_response = 2;
+      GetRecommendationsResponse get_recommendations_response = 3;
+      BatchGetCostTrendsResponse batch_get_cost_trends_response = 4;
+    }
+}
+// 123是标识符
+message Account {
+  string provider = 1;
+  string account_id = 2;
+  string region = 3;
+}
+
+message TimeRange {
+    google.protobuf.Timestamp start_time = 1;
+    google.protobuf.Timestamp end_time = 2;
+}
+
+message Filter{
+
+}
+
+message DailyCost{
+    google.protobuf.Timestamp date = 1;
+    double cost = 2;
+}
+
+message CostTrend{
+    string service = 1;
+    repeated DailyCost daily_costs = 2;
+}
+
+message StreamBillingDataRequest{
+    repeated Account accounts = 1; // repeated表示可以有多个账户
+    TimeRange time_range = 2;
+}
+
+message StreamBillingDataResponse{
+    string provider = 1;
+    string account_id = 2;
+    string service = 3;
+    double cost = 4;
+    google.protobuf.Timestamp usage_date = 5;
+}
+
+message WatchCostAlertsRequest{
+    repeated Account accounts = 1;
+    double cost_threshold = 2;
+}
+
+message WatchCostAlertsResponse{
+    string title = 1;
+    string description = 2;
+    double current_cost = 3;
+    google.protobuf.Timestamp alert_time = 4;
+}
+
+
+
+message Recommendation{
+    string title = 1;
+    string description = 2;
+    double estimated_savings = 3;
+}
+
+message GetRecommendationsRequest{
+    Account account = 1;
+}
+
+message GetRecommendationsResponse{
+    repeated Recommendation recommendations = 1;
+}
+
+message BatchGetCostTrendsRequest{
+    Account account = 1;
+    string service = 2;
+}
+
+message BatchGetCostTrendsResponse{
+    repeated CostTrend trends = 1;
+}
