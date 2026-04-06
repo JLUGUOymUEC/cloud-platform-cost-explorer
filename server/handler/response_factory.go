@@ -35,12 +35,12 @@ func (responseFactory *ResponseFactory) CreateStreamBillingDataResponse(provider
 	}, nil
 }
 
-func (responseFactory *ResponseFactory) CreateBatchGetCostTrendsResponse(trends []*pb.CostTrend) (*pb.BatchGetCostTrendsResponse, error) {
-	if trends == nil {
+func (responseFactory *ResponseFactory) CreateBatchGetCostTrendsResponse(trend *pb.CostTrend) (*pb.BatchGetCostTrendsResponse, error) {
+	if trend == nil {
 		return nil, fmt.Errorf("trends cannot be nil")
 	}
 	return &pb.BatchGetCostTrendsResponse{
-		Trends: trends,
+		Trend: trend,
 	}, nil
 }
 

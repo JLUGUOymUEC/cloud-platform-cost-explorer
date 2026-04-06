@@ -126,15 +126,29 @@ func (service *AWSService) ProcessCostTrends(account *pb.Account, tag string) (*
 	if err != nil {
 		return nil, err
 	}
-	for _, record := range costForecastData.ForecastResultsByTime {
-		cost, _ := strconv.ParseFloat(*record.Total.Amount, 64)
-		records = NewProcessCostTrendsRes(cost)
+	costTrend := &pb.CostTrend{
+		Tag:        tag,
+		DailyCosts: []*pb.DailyCost{},
 	}
+	for _, record := range costForecastData.ForecastResultsByTime {
+		cost, _ := strconv.ParseFloat(*record.PredictionIntervalLowerBound, 64)
+		usageDate, err := time.Parse("2006-01-02", *record.TimePeriod.Start)
+		if err != nil {
+			return nil, err
+		}
+		usageDateTimestamp := timestamppb.New(usageDate)
+		costTrend.DailyCosts = append(costTrend.DailyCosts, &pb.DailyCost{Cost: cost, Date: usageDateTimestamp})
+
+	}
+	records = NewProcessCostTrendsRes(costTrend)
 	return records, nil
 }
 
 func (service *AWSService) ProcessRecommendation(account *pb.Account) (*ProcessRecommendationRes, error) {
-	return nil
+	var records *ProcessRecommendationRes
+	
+	return records, nil
+
 }
 
 func (service *AWSService) ProcessWatchCostAlerts(account *pb.Account, costThreshold float64) (*ProcessWatchCostAlertsRes, error) {

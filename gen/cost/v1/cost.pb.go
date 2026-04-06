@@ -903,7 +903,7 @@ func (x *GetRecommendationsResponse) GetRecommendations() []*Recommendation {
 type BatchGetCostTrendsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Account       *Account               `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
-	Service       string                 `protobuf:"bytes,2,opt,name=service,proto3" json:"service,omitempty"`
+	Tag           string                 `protobuf:"bytes,2,opt,name=tag,proto3" json:"tag,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -945,16 +945,16 @@ func (x *BatchGetCostTrendsRequest) GetAccount() *Account {
 	return nil
 }
 
-func (x *BatchGetCostTrendsRequest) GetService() string {
+func (x *BatchGetCostTrendsRequest) GetTag() string {
 	if x != nil {
-		return x.Service
+		return x.Tag
 	}
 	return ""
 }
 
 type BatchGetCostTrendsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Trends        []*CostTrend           `protobuf:"bytes,1,rep,name=trends,proto3" json:"trends,omitempty"`
+	Trend         *CostTrend             `protobuf:"bytes,1,opt,name=trend,proto3" json:"trend,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -989,9 +989,9 @@ func (*BatchGetCostTrendsResponse) Descriptor() ([]byte, []int) {
 	return file_cost_v1_cost_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *BatchGetCostTrendsResponse) GetTrends() []*CostTrend {
+func (x *BatchGetCostTrendsResponse) GetTrend() *CostTrend {
 	if x != nil {
-		return x.Trends
+		return x.Trend
 	}
 	return nil
 }
@@ -1058,12 +1058,12 @@ const file_cost_v1_cost_proto_rawDesc = "" +
 	"\x19GetRecommendationsRequest\x12*\n" +
 	"\aaccount\x18\x01 \x01(\v2\x10.cost.v1.AccountR\aaccount\"_\n" +
 	"\x1aGetRecommendationsResponse\x12A\n" +
-	"\x0frecommendations\x18\x01 \x03(\v2\x17.cost.v1.RecommendationR\x0frecommendations\"a\n" +
+	"\x0frecommendations\x18\x01 \x03(\v2\x17.cost.v1.RecommendationR\x0frecommendations\"Y\n" +
 	"\x19BatchGetCostTrendsRequest\x12*\n" +
-	"\aaccount\x18\x01 \x01(\v2\x10.cost.v1.AccountR\aaccount\x12\x18\n" +
-	"\aservice\x18\x02 \x01(\tR\aservice\"H\n" +
-	"\x1aBatchGetCostTrendsResponse\x12*\n" +
-	"\x06trends\x18\x01 \x03(\v2\x12.cost.v1.CostTrendR\x06trends2X\n" +
+	"\aaccount\x18\x01 \x01(\v2\x10.cost.v1.AccountR\aaccount\x12\x10\n" +
+	"\x03tag\x18\x02 \x01(\tR\x03tag\"F\n" +
+	"\x1aBatchGetCostTrendsResponse\x12(\n" +
+	"\x05trend\x18\x01 \x01(\v2\x12.cost.v1.CostTrendR\x05trend2X\n" +
 	"\x17CostOptimizationService\x12=\n" +
 	"\x06Handle\x12\x16.cost.v1.HandleRequest\x1a\x17.cost.v1.HandleResponse(\x010\x01B)Z'cloud-cost-optimizer/gen/cost/v1;costv1b\x06proto3"
 
@@ -1120,7 +1120,7 @@ var file_cost_v1_cost_proto_depIdxs = []int32{
 	2,  // 17: cost.v1.GetRecommendationsRequest.account:type_name -> cost.v1.Account
 	11, // 18: cost.v1.GetRecommendationsResponse.recommendations:type_name -> cost.v1.Recommendation
 	2,  // 19: cost.v1.BatchGetCostTrendsRequest.account:type_name -> cost.v1.Account
-	6,  // 20: cost.v1.BatchGetCostTrendsResponse.trends:type_name -> cost.v1.CostTrend
+	6,  // 20: cost.v1.BatchGetCostTrendsResponse.trend:type_name -> cost.v1.CostTrend
 	0,  // 21: cost.v1.CostOptimizationService.Handle:input_type -> cost.v1.HandleRequest
 	1,  // 22: cost.v1.CostOptimizationService.Handle:output_type -> cost.v1.HandleResponse
 	22, // [22:23] is the sub-list for method output_type

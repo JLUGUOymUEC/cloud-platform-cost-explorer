@@ -121,21 +121,19 @@ func (handler *CostOptimizerHandler) handleBatchGetCostTrendsRequest(req *pb.Han
 	var res *service.ProcessCostTrendsRes
 	var err error
 	if _, ok := handler.cloudProviders[Account.GetProvider()]; !ok {
-		res = service.NewProcessCostTrendsRes([]*pb.CostTrend{
-			{
+		res = service.NewProcessCostTrendsRes(pb.CostTrend{
 				Tag:        "Unknown",
 				DailyCosts: nil,
-			},
 		})
 	} else {
-		res, err = handler.cloudProviders[Account.GetProvider()].ProcessCostTrends(Account, batchGetCostTrendsRequest.GetService())
+		res, err = handler.cloudProviders[Account.GetProvider()].ProcessCostTrends(Account, batchGetCostTrendsRequest.GetTag())
 	}
 	if err != nil {
 		fmt.Printf("Error creating BatchGetCostTrendsResponse: %v\n", err)
 		return err
 	}
 	response, err := handler.responseFactory.CreateBatchGetCostTrendsResponse(
-		res.GetCostTrends(),
+		res.GetCostTrend(),
 	)
 	if err != nil {
 		fmt.Printf("Error creating BatchGetCostTrendsResponse: %v\n", err)

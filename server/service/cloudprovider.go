@@ -7,9 +7,13 @@ import (
 )
 
 type CloudProvider interface {
+	//按日获取aws azure alert账单
 	ProcessBillingData(account *pb.Account, timerange *pb.TimeRange) ([]*ProcessBillingDataRes, error)
+	//获取aws azure alert账单趋势
 	ProcessCostTrends(account *pb.Account, service string) (*ProcessCostTrendsRes, error)
+	//获取aws azure alert计划推荐
 	ProcessRecommendation(account *pb.Account) (*ProcessRecommendationRes, error)
+	//获取aws azure alert监控
 	ProcessWatchCostAlerts(account *pb.Account, costThreshold float64) (*ProcessWatchCostAlertsRes, error)
 }
 
@@ -21,7 +25,7 @@ type ProcessBillingDataRes struct {
 }
 
 type ProcessCostTrendsRes struct {
-	trends []*pb.CostTrend
+	trend pb.CostTrend
 }
 
 type ProcessRecommendationRes struct {
@@ -48,8 +52,8 @@ func (res *ProcessBillingDataRes) GetUsageDate() *timestamppb.Timestamp {
 	return res.usageDate
 }
 
-func (res *ProcessCostTrendsRes) GetCostTrends() []*pb.CostTrend {
-	return res.trends
+func (res *ProcessCostTrendsRes) GetCostTrend() *pb.CostTrend {
+	return &res.trend
 }
 
 func (res *ProcessRecommendationRes) GetRecommendations() []*pb.Recommendation {
@@ -81,9 +85,9 @@ func NewProcessBillingDataRes(tag string, cost float64, usageDate *timestamppb.T
 	}
 }
 
-func NewProcessCostTrendsRes(costTrends []*pb.CostTrend) *ProcessCostTrendsRes {
+func NewProcessCostTrendsRes(costTrend *pb.CostTrend) *ProcessCostTrendsRes {
 	return &ProcessCostTrendsRes{
-		trends: costTrends,
+		trend: *costTrend,
 	}
 }
 
