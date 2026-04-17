@@ -146,7 +146,42 @@ func (service *AWSService) ProcessCostTrends(account *pb.Account, tag string) (*
 
 func (service *AWSService) ProcessRecommendation(account *pb.Account) (*ProcessRecommendationRes, error) {
 	var records *ProcessRecommendationRes
-	
+
+	var serviceList []string
+	// process recommendation from 30 days ago
+	today := timestamppb.New(time.Now())
+	startDate := timestamppb.New(today.AsTime().AddDate(0, -30, 0))
+	timePeriod := &types.DateInterval{
+		Start: aws.String(startDate.AsTime().Format("2006-01-02")), //需要先指定格式转成字符串
+		End:   aws.String(today.AsTime().Format("2006-01-02")),
+	}
+	resp, err := service.ceClient.GetDimensionValues(service.ctx, &costexplorer.GetDimensionValuesInput{
+		Dimension: types.DimensionService,
+		TimePeriod: timePeriod,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, dimensionValue := range resp.DimensionValues{
+		if dimensionValue.Value != nil {
+			serviceList = append(serviceList, *dimensionValue.Value)
+		}		
+	}
+	for _, serviceType := range serviceList{
+		recomandationData , err := service.ceClient.GetReservationPurchaseRecommendation(service.ctx, &costexplorer.GetReservationPurchaseRecommendationInput{
+			Service: &serviceType,
+			AccountId: &account.AccountId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		recomandation := &pb.Recommendation{
+			Title: ,
+			Description: ,
+			EstimatedSavings: 
+		}
+	}
+
 	return records, nil
 
 }
